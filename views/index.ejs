@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= title %></title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <script src="/javascripts/encode.js" charset='utf-8'></script>
+    <script src="/javascripts/domParse.js" charset='utf-8'></script>
+    <script type="text/javascript">
+ 		var parse = function(str){
+ 			var results = '';
+ 			try{
+         //例：<h1 class="header">hjhdjshjhj</h1>
+          HTMLParser(he.unescape(str,{strict:true}),{//he:表示encode的对象,unescape:输入反转；HTMLParser：正常显示的最后结果
+            //标签开始 <h1 class="header"> tag:h1; attrs:class="header";unary:是否是单标签
+              start:function(tag,attrs,unary){
+                //过滤掉标签
+                  if(tag=='script'||tag=='style'||tag=='link'||tag=='iframe'||tag=='frame')return;
+                  results += '<'+tag;
+                  for(var i=0,len=attrs.length;i<len;i++){
+                      results += " "+attrs[i].name+'="'+attrs[i].escaped+'"';
+                  }
+                  results += (unary?"/":"")+">";
+              },
+              //标签结束</h1>
+              end:function(tag){
+                  results += "</"+tag+">";
+              },
+              // 内容 hjhdjshjhj
+              chars:function(text){
+                  results += text;
+              },
+              // 注释
+              comment:function(text){
+                  results +="<!--"+text+"-->";
+              }
+          });
+          return results;
+ 			}catch(e){
+                console.log(e);
+ 			}finally{
+ 				
+ 			}
+ 		}
+ 	</script>
+  </head>
+  <body>
+    <h1><%= title %></h1>
+    <p>Welcome to <%= title %></p>
+    <textarea name="name" rows="8" cols="80" id="txt">
+       <p>sks <img src="null" alt="" onerror ="alert(1)"></p>
+    </textarea>
+
+    <button type="button" name = "button" id="btn">评论</button>
+    <button type="button" name = "button" id="get">获取评论</button>
+    <script type="text/javascript">
+      var btn = document.getElementById('btn');
+      var get = document.getElementById('get');
+      var txt = document.getElementById('txt');
+      btn.addEventListener('click',function(){
+       
+        var xhr = new XMLHttpRequest();
+        var url = 'comment?comment='+txt.value;
+        xhr.open('get',url,true);
+       
+        xhr.onreadystatechange = function(){
+          if(xhr.readyState==4){
+            if(xhr.state==200){
+              console.info(xhr);
+            }else{
+              console.info('error');
+            }
+          }
+        }
+        xhr.send();
+      })
+      get.addEventListener('click',function(){
+        var xhr = new XMLHttpRequest();
+        var url = '/getComment';
+        xhr.open('get',url,true);
+        xhr.onreadystatechange = function(){
+          if(xhr.readyState==4){
+            if(xhr.status==200){
+               var com = parse(JSON.parse(xhr.response).comment);
+               var txt = document.createElement('span');
+               txt.innerHTML=com;
+               document.body.appendChild(txt);
+               
+            }else{
+              console.info('error');
+            }
+          }
+        }
+        xhr.send();
+      })
+    </script>
+  </body>
+</html>
